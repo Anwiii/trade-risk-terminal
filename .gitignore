@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+trade_data_final_merged.csv
+anomaly_event_links.csv
+event_analysis_*.csv
+mirror_disruption_*.csv
+trade_disruption_*.csv
+v4_*.csv
+what_if_demo_projection.csv
