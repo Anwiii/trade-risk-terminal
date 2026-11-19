@@ -6,7 +6,7 @@ from datetime import datetime
 from utils import load_combined_grid
 from analyze_v4 import build_fold, period_str
 
-st.title("🔍 Historical Detector")
+st.title("Historical Detector")
 
 full = load_combined_grid()
 if full is None: st.stop()
@@ -28,7 +28,7 @@ with st.sidebar:
                 break
     
     country_val = st.selectbox("Focus Country", country_options, index=default_idx)
-    run = st.button("⚡ Run Analysis", type="primary", use_container_width=True)
+    run = st.button("Run Analysis", type="primary", use_container_width=True)
 
 if run:
     if country_val == "All":
@@ -81,36 +81,30 @@ if run:
                 direction = "collapsed" if deficit > 0 else "spiked"
                 pct_change = (deficit / expected_window) * 100 if expected_window > 0 else 0
 
+            note_class = "loss" if deficit > 0 else "gain"
             st.markdown(f"""
-            <div style="display:flex; gap:12px; margin-bottom:20px;">
-                <div style="flex:1; background:#111827; border:1px solid #1f2937; border-radius:8px; padding:16px 20px;">
-                    <div style="color:#9ca3af; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;">Worst Hit Series</div>
-                    <div style="color:#f9fafb; font-size:1.1rem; font-weight:700;">{worst_drop_row['commodity_name']}</div>
-                    <div style="color:#9ca3af; font-size:0.85rem; margin-top:4px;">{worst_drop_row['reporterDesc']}</div>
-                </div>
-                <div style="flex:1; background:#111827; border:1px solid #1f2937; border-radius:8px; padding:16px 20px;">
-                    <div style="color:#9ca3af; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;">Volume Change</div>
-                    <div style="color:#f9fafb; font-size:1.8rem; font-weight:700;">{abs(pct_change):.1f}%</div>
-                    <div style="color:{'#ef4444' if deficit > 0 else '#10b981'}; font-size:0.85rem; margin-top:4px; font-weight:500;">{direction}</div>
-                </div>
-                <div style="flex:1; background:#111827; border:1px solid #1f2937; border-radius:8px; padding:16px 20px;">
-                    <div style="color:#9ca3af; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;">Estimated Impact</div>
-                    <div style="color:#f9fafb; font-size:1.8rem; font-weight:700;">${impact_b:,.2f}B</div>
-                    <div style="color:{'#ef4444' if deficit > 0 else '#10b981'}; font-size:0.85rem; margin-top:4px; font-weight:500;">{'lost volume' if deficit > 0 else 'unexpected gain'}</div>
-                </div>
-                <div style="flex:1; background:#111827; border:1px solid #1f2937; border-radius:8px; padding:16px 20px;">
-                    <div style="color:#9ca3af; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;">Analysis Window</div>
-                    <div style="color:#f9fafb; font-size:1rem; font-weight:700;">{period_str(window_start)}–{period_str(window_end)}</div>
-                    <div style="color:#9ca3af; font-size:0.85rem; margin-top:4px;">12-month post-event</div>
-                </div>
+            <div class="stat-row">
+                <span class="stat-value" style="font-size:1.1rem;">{worst_drop_row['commodity_name']}</span>
+                <span class="stat-label">Worst Hit Series<br>{worst_drop_row['reporterDesc']}</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-value">{abs(pct_change):.1f}%</span>
+                <span class="stat-label">Volume Change<br><span class="stat-note {note_class}" style="text-transform:none; letter-spacing:normal;">{direction}</span></span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-value">${impact_b:,.2f}B</span>
+                <span class="stat-label">Estimated Impact<br><span class="stat-note {note_class}" style="text-transform:none; letter-spacing:normal;">{'lost volume' if deficit > 0 else 'unexpected gain'}</span></span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-value" style="font-size:1.1rem;">{period_str(window_start)}–{period_str(window_end)}</span>
+                <span class="stat-label">Analysis Window<br>12-month post-event</span>
             </div>
             """, unsafe_allow_html=True)
 
             st.markdown(f"""
-            <div style="background:#1f1214; border-left:4px solid #ef4444; border-radius:6px; padding:16px 20px; margin-bottom:16px;">
-                <h4 style="color:#ef4444; margin:0 0 8px 0; font-size:0.9rem;">⚠️ Disruption Detected</h4>
-                <p style="color:#d1d5db; margin:0; font-size:0.9rem; line-height:1.5;"><strong>{worst_drop_row['reporterDesc']}</strong> {worst_drop_row['commodity_name']} {worst_drop_row['flowDesc']}s {direction} by <strong>{abs(pct_change):.1f}%</strong> below expected trend, resulting in <strong>${impact_b:,.2f}B</strong> in {'lost' if deficit > 0 else 'unexpected'} trade volume.</p>
-            </div>
+            <p class="callout"><strong>{worst_drop_row['reporterDesc']}</strong> {worst_drop_row['commodity_name']} {worst_drop_row['flowDesc']}s
+            <strong class="{note_class}">{direction}</strong> by <strong>{abs(pct_change):.1f}%</strong> below expected trend, resulting in
+            <strong class="{note_class}">${impact_b:,.2f}B</strong> in {'lost' if deficit > 0 else 'unexpected'} trade volume.</p>
             """, unsafe_allow_html=True)
 
             series_plot = top_series.copy()
@@ -122,7 +116,7 @@ if run:
             fig.add_trace(go.Scatter(x=series_plot["date"], y=actual_b, mode='lines', name='Actual Trade', line=dict(color='#3b82f6', width=2.5)))
             fig.add_trace(go.Scatter(x=series_plot["date"], y=expected_b, mode='lines', name='Expected Trend', line=dict(color='#6b7280', width=1.5, dash='dash')))
             fig.add_trace(go.Scatter(x=series_plot["date"], y=expected_b, fill='tonexty', fillcolor='rgba(239, 68, 68, 0.15)', mode='lines', line=dict(width=0), showlegend=False, hoverinfo='skip'))
-            fig.add_vline(x=datetime(ey, em, 1), line_dash="dot", line_color="#f59e0b", line_width=2)
+            fig.add_vline(x=datetime(ey, em, 1), line_dash="dot", line_color="#6b7280", line_width=2)
             
             fig.update_layout(
                 template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
@@ -132,7 +126,7 @@ if run:
             )
             st.plotly_chart(fig, use_container_width=True)
 
-            st.markdown('<div style="background:#111827; border:1px solid #1f2937; border-radius:8px; padding:20px; margin-bottom:16px;"><div style="color:#9ca3af; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px; font-weight:600;">Monthly Deviation from Trend</div>', unsafe_allow_html=True)
+            st.markdown('<div style="color:#7c8699; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; margin:28px 0 12px; font-weight:600;">Monthly Deviation from Trend</div>', unsafe_allow_html=True)
             series_plot["diff_b"] = actual_b - expected_b
             colors = ['#ef4444' if x < 0 else '#10b981' for x in series_plot["diff_b"]]
             
@@ -144,11 +138,8 @@ if run:
                 font=dict(color='#9ca3af', size=11), showlegend=False
             )
             st.plotly_chart(fig2, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
 else:
     st.markdown("""
-    <div style="text-align: center; padding: 80px 20px; color: #6b7280;">
-        <h2 style="color: #6b7280;">🔍</h2>
-        <p>Select an event and country in the sidebar, then click <strong>Run Analysis</strong>.</p>
-    </div>
+    <p style="color:#9ca3af; font-size:1.05rem; margin-top:24px;">
+    Select an event and country in the sidebar, then click <strong>Run Analysis</strong>.</p>
     """, unsafe_allow_html=True)

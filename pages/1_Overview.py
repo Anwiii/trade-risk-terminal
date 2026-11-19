@@ -3,41 +3,12 @@ import pandas as pd
 import plotly.express as px
 from utils import load_combined_grid
 
-# Page Config & CSS for this specific page
+# --- HERO SECTION — plain headline + paragraph, no banner box ---
 st.markdown("""
-<style>
-    /* Hero Banner */
-    .hero-banner {
-        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-        color: white;
-        padding: 40px 30px;
-        border-radius: 12px;
-        margin-bottom: 30px;
-        text-align: center;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-    }
-    .hero-banner h1 { color: white !important; font-size: 3rem; margin-bottom: 10px; }
-    .hero-banner p { color: #e2e8f0; font-size: 1.2rem; }
-    
-    /* Status Cards */
-    .stat-card {
-        background: #111827;
-        border: 1px solid #1f2937;
-        border-radius: 10px;
-        padding: 24px;
-        text-align: center;
-    }
-    .stat-value { color: #60a5fa; font-size: 2.5rem; font-weight: 700; }
-    .stat-label { color: #9ca3af; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; }
-</style>
-""", unsafe_allow_html=True)
-
-# --- HERO SECTION ---
-st.markdown("""
-<div class="hero-banner">
-    <h1>🌍 Global Trade Risk Terminal</h1>
-    <p>Real-time anomaly detection and Monte Carlo risk simulation for global commodity flows.</p>
-</div>
+<h1 style="font-size:2.6rem; font-weight:600; letter-spacing:-0.5px; margin-bottom:12px;">
+Where global trade starts to break.</h1>
+<p style="color:#9ca3af; font-size:1.05rem; max-width:52ch; margin-bottom:44px;">
+Real-time anomaly detection and Monte Carlo risk simulation for global commodity flows.</p>
 """, unsafe_allow_html=True)
 
 full = load_combined_grid()
@@ -54,14 +25,14 @@ country_totals["trade_value_b"] = country_totals["trade_value"] / 1e9
 col1, col2 = st.columns([2, 1])
 
 with col1:
-    st.markdown("### 🗺️ Global Trade Volume (Billions USD)")
+    st.markdown("### Global Trade Volume (Billions USD)")
     fig = px.choropleth(
         country_totals, 
         locations="reporterDesc", 
         locationmode="country names",
         color="trade_value_b", 
         hover_name="reporterDesc", 
-        color_continuous_scale="Blues",
+        color_continuous_scale="Viridis",
     )
     fig.update_layout(
         template="plotly_dark", 
@@ -73,25 +44,10 @@ with col1:
     st.plotly_chart(fig, use_container_width=True)
 
 with col2:
-    st.markdown("### 📊 Data Coverage")
-    
-    st.markdown(f"""
-    <div class="stat-card" style="margin-bottom: 15px;">
-        <div class="stat-value">{len(full):,}</div>
-        <div class="stat-label">Total Records Ingested</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("### Data Coverage")
 
     st.markdown(f"""
-    <div class="stat-card" style="margin-bottom: 15px;">
-        <div class="stat-value">{full["reporterDesc"].nunique()}</div>
-        <div class="stat-label">Countries Covered</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown(f"""
-    <div class="stat-card">
-        <div class="stat-value">{full["commodity_name"].nunique()}</div>
-        <div class="stat-label">Commodities Tracked</div>
-    </div>
+    <div class="stat-row"><span class="stat-value">{len(full):,}</span><span class="stat-label">Total Records<br>Ingested</span></div>
+    <div class="stat-row"><span class="stat-value">{full["reporterDesc"].nunique()}</span><span class="stat-label">Countries<br>Covered</span></div>
+    <div class="stat-row"><span class="stat-value">{full["commodity_name"].nunique()}</span><span class="stat-label">Commodities<br>Tracked</span></div>
     """, unsafe_allow_html=True)

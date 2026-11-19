@@ -5,7 +5,7 @@ from utils import load_combined_grid, get_analog_library
 from what_if_simulator import run_scenario
 from analyze_v4 import PARTNER_ISO_TO_NAME
 
-st.title("🛡️ Risk Simulator")
+st.title("Risk Simulator")
 
 full = load_combined_grid()
 if full is None: st.stop()
@@ -17,7 +17,7 @@ except Exception as e:
     st.stop()
 
 with st.sidebar:
-    st.markdown("### ⚙️ Simulator Settings")
+    st.markdown("### Settings")
     wi_country = st.selectbox("Country", sorted(full["reporterDesc"].dropna().unique().tolist()), index=0)
     wi_commodity = st.selectbox("Commodity", sorted(full["commodity_name"].dropna().unique().tolist()), index=0)
     wi_date = st.date_input("Hypothetical Start", datetime(2025, 1, 1))
@@ -42,29 +42,29 @@ if run_sim:
         loss_pct = ((median_avg - baseline_avg) / baseline_avg) * 100
         worst_case_loss = baseline_avg - p10_avg
 
+        median_note = "loss" if loss_pct < 0 else "gain"
         st.markdown(f"""
-        <div style="display:flex; gap:12px; margin-bottom:20px;">
-            <div style="flex:1; background:#111827; border:1px solid #1f2937; border-radius:8px; padding:16px 20px;">
-                <div style="color:#9ca3af; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;">Expected Baseline</div>
-                <div style="color:#f9fafb; font-size:1.8rem; font-weight:700;">${baseline_avg:,.2f}B</div>
-                <div style="color:#9ca3af; font-size:0.85rem; margin-top:4px;">per month, no disruption</div>
-            </div>
-            <div style="flex:1; background:#111827; border:1px solid #1f2937; border-radius:8px; padding:16px 20px;">
-                <div style="color:#9ca3af; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;">Median Projection</div>
-                <div style="color:#f9fafb; font-size:1.8rem; font-weight:700;">${median_avg:,.2f}B</div>
-                <div style="color:{'#ef4444' if loss_pct < 0 else '#10b981'}; font-size:0.85rem; margin-top:4px; font-weight:500;">{loss_pct:+.1f}% change</div>
-            </div>
-            <div style="flex:1; background:#111827; border:1px solid #1f2937; border-radius:8px; padding:16px 20px;">
-                <div style="color:#9ca3af; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;">Worst-Case (P10)</div>
-                <div style="color:#f9fafb; font-size:1.8rem; font-weight:700;">${p10_avg:,.2f}B</div>
-                <div style="color:#ef4444; font-size:0.85rem; margin-top:4px; font-weight:500;">${worst_case_loss:,.2f}B lost/month</div>
-            </div>
-            <div style="flex:1; background:#111827; border:1px solid #1f2937; border-radius:8px; padding:16px 20px;">
-                <div style="color:#9ca3af; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px;">Scenario</div>
-                <div style="color:#f9fafb; font-size:1rem; font-weight:700;">{wi_date.strftime('%b %Y')}</div>
-                <div style="color:#9ca3af; font-size:0.85rem; margin-top:4px;">{wi_country} · {wi_commodity}</div>
-            </div>
+        <div class="stat-row">
+            <span class="stat-value">${baseline_avg:,.2f}B</span>
+            <span class="stat-label">Expected Baseline<br>per month, no disruption</span>
         </div>
+        <div class="stat-row">
+            <span class="stat-value">${median_avg:,.2f}B</span>
+            <span class="stat-label">Median Projection<br><span class="stat-note {median_note}" style="text-transform:none; letter-spacing:normal;">{loss_pct:+.1f}% change</span></span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-value">${p10_avg:,.2f}B</span>
+            <span class="stat-label">Worst-Case (P10)<br><span class="stat-note loss" style="text-transform:none; letter-spacing:normal;">${worst_case_loss:,.2f}B lost/month</span></span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-value" style="font-size:1.1rem;">{wi_date.strftime('%b %Y')}</span>
+            <span class="stat-label">Scenario<br>{wi_country} · {wi_commodity}</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown(f"""
+        <div style="color:#7c8699; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; margin:28px 0 12px; font-weight:600;">
+        Risk Projection &middot; {wi_country} &middot; {wi_commodity} &middot; {wi_date.strftime('%b %Y')}</div>
         """, unsafe_allow_html=True)
 
         fig = go.Figure()
@@ -75,11 +75,9 @@ if run_sim:
         
         fig.update_layout(
             template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-            title=f"Risk Projection: {wi_country} · {wi_commodity} · {wi_date.strftime('%b %Y')}",
-            title_font=dict(color='#f9fafb', size=14),
             xaxis_title="Months Since Disruption", yaxis_title="Billions USD",
             hovermode="x unified", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            margin=dict(l=0, r=0, t=50, b=0), height=420, font=dict(color='#9ca3af', size=11)
+            margin=dict(l=0, r=0, t=20, b=0), height=420, font=dict(color='#9ca3af', size=11)
         )
         st.plotly_chart(fig, use_container_width=True)
         
