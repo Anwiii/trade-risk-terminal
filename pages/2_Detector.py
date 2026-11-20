@@ -14,6 +14,7 @@ if full is None: st.stop()
 search_val = st.session_state.get("search_query", "")
 
 with st.sidebar:
+    st.markdown("### Settings")
     event_choice = st.selectbox("Event", ["Russia-Ukraine War (Feb 2022)", "COVID-19 Pandemic (Mar 2020)"])
     event_date_str = "2022-02" if "War" in event_choice else "2020-03"
     ey, em = map(int, event_date_str.split("-"))
@@ -81,32 +82,46 @@ if run:
                 direction = "collapsed" if deficit > 0 else "spiked"
                 pct_change = (deficit / expected_window) * 100 if expected_window > 0 else 0
 
-            note_class = "loss" if deficit > 0 else "gain"
+            # FIXED GRAMMAR LOGIC
+            note_class = "text-red" if deficit > 0 else "text-green"
+            trend_word = "below" if deficit > 0 else "above"
+            effect_word = "lost" if deficit > 0 else "unexpected"
+            
+            # Styled Stat Rows using custom CSS classes from app.py
             st.markdown(f"""
-            <div class="stat-row">
-                <span class="stat-value" style="font-size:1.1rem;">{worst_drop_row['commodity_name']}</span>
-                <span class="stat-label">Worst Hit Series<br>{worst_drop_row['reporterDesc']}</span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-value">{abs(pct_change):.1f}%</span>
-                <span class="stat-label">Volume Change<br><span class="stat-note {note_class}" style="text-transform:none; letter-spacing:normal;">{direction}</span></span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-value">${impact_b:,.2f}B</span>
-                <span class="stat-label">Estimated Impact<br><span class="stat-note {note_class}" style="text-transform:none; letter-spacing:normal;">{'lost volume' if deficit > 0 else 'unexpected gain'}</span></span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-value" style="font-size:1.1rem;">{period_str(window_start)}–{period_str(window_end)}</span>
-                <span class="stat-label">Analysis Window<br>12-month post-event</span>
+            <div class="divider-row">
+                <div class="divider-item">
+                    <div class="divider-label">Worst Hit Series</div>
+                    <div class="divider-value">{worst_drop_row['commodity_name']}</div>
+                    <div style="color: #9ca3af; font-size: 0.85rem;">{worst_drop_row['reporterDesc']}</div>
+                </div>
+                <div class="divider-item">
+                    <div class="divider-label">Volume Change</div>
+                    <div class="divider-value {note_class}">{abs(pct_change):.1f}%</div>
+                    <div style="color: #9ca3af; font-size: 0.85rem;">{direction}</div>
+                </div>
+                <div class="divider-item">
+                    <div class="divider-label">Estimated Impact</div>
+                    <div class="divider-value mono {note_class}">${impact_b:,.2f}B</div>
+                    <div style="color: #9ca3af; font-size: 0.85rem;">{effect_word} volume</div>
+                </div>
+                <div class="divider-item">
+                    <div class="divider-label">Analysis Window</div>
+                    <div class="divider-value" style="font-size: 1.1rem; padding-top: 5px;">{period_str(window_start)} to {period_str(window_end)}</div>
+                </div>
             </div>
             """, unsafe_allow_html=True)
 
+            # FIXED CALLOUT SENTENCE
             st.markdown(f"""
-            <p class="callout"><strong>{worst_drop_row['reporterDesc']}</strong> {worst_drop_row['commodity_name']} {worst_drop_row['flowDesc']}s
-            <strong class="{note_class}">{direction}</strong> by <strong>{abs(pct_change):.1f}%</strong> below expected trend, resulting in
-            <strong class="{note_class}">${impact_b:,.2f}B</strong> in {'lost' if deficit > 0 else 'unexpected'} trade volume.</p>
+            <p style="font-size: 1rem; margin-bottom: 25px; line-height: 1.6; color: #d1d5db;">
+                <strong>{worst_drop_row['reporterDesc']}</strong> {worst_drop_row['commodity_name']} {worst_drop_row['flowDesc']}s {direction} by 
+                <strong class="{note_class}">{abs(pct_change):.1f}%</strong> {trend_word} expected trend, resulting in 
+                <strong class="{note_class}">${impact_b:,.2f}B</strong> in {effect_word} trade volume.
+            </p>
             """, unsafe_allow_html=True)
 
+            # CHARTS
             series_plot = top_series.copy()
             series_plot["date"] = series_plot["period"].apply(lambda p: datetime(int(p) // 100, int(p) % 100, 1))
             actual_b = np.expm1(series_plot["log_value"]) / 1e9
@@ -122,7 +137,7 @@ if run:
                 template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
                 yaxis_title="Billions USD", hovermode="x unified",
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-                margin=dict(l=0, r=0, t=30, b=0), height=420, font=dict(color='#9ca3af', size=11)
+                margin=dict(l=0, r=0, t=30, b=0), height=400, font=dict(color='#9ca3af', size=11)
             )
             st.plotly_chart(fig, use_container_width=True)
 

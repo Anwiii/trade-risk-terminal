@@ -34,7 +34,9 @@ if run_sim:
             analog_df=analog_df 
         )
         
-        for w in warns: st.warning(w)
+        # Display warnings cleanly
+        for w in warns: 
+            st.warning(w)
         
         baseline_avg = projection["projected_trend_value"].mean() / 1e9
         median_avg = projection["median_estimate_p50"].mean() / 1e9
@@ -42,23 +44,31 @@ if run_sim:
         loss_pct = ((median_avg - baseline_avg) / baseline_avg) * 100
         worst_case_loss = baseline_avg - p10_avg
 
-        median_note = "loss" if loss_pct < 0 else "gain"
+        median_note = "text-red" if loss_pct < 0 else "text-green"
+        
+        # Styled Stat Rows
         st.markdown(f"""
-        <div class="stat-row">
-            <span class="stat-value">${baseline_avg:,.2f}B</span>
-            <span class="stat-label">Expected Baseline<br>per month, no disruption</span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-value">${median_avg:,.2f}B</span>
-            <span class="stat-label">Median Projection<br><span class="stat-note {median_note}" style="text-transform:none; letter-spacing:normal;">{loss_pct:+.1f}% change</span></span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-value">${p10_avg:,.2f}B</span>
-            <span class="stat-label">Worst-Case (P10)<br><span class="stat-note loss" style="text-transform:none; letter-spacing:normal;">${worst_case_loss:,.2f}B lost/month</span></span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-value" style="font-size:1.1rem;">{wi_date.strftime('%b %Y')}</span>
-            <span class="stat-label">Scenario<br>{wi_country} · {wi_commodity}</span>
+        <div class="divider-row">
+            <div class="divider-item">
+                <div class="divider-label">Expected Baseline</div>
+                <div class="divider-value mono">${baseline_avg:,.2f}B</div>
+                <div style="color: #9ca3af; font-size: 0.85rem;">per month, no disruption</div>
+            </div>
+            <div class="divider-item">
+                <div class="divider-label">Median Projection</div>
+                <div class="divider-value mono {median_note}">${median_avg:,.2f}B</div>
+                <div style="color: #9ca3af; font-size: 0.85rem;">{loss_pct:+.1f}% change</div>
+            </div>
+            <div class="divider-item">
+                <div class="divider-label">Worst-Case (P10)</div>
+                <div class="divider-value mono text-red">${p10_avg:,.2f}B</div>
+                <div style="color: #9ca3af; font-size: 0.85rem;">${worst_case_loss:,.2f}B lost/month</div>
+            </div>
+            <div class="divider-item">
+                <div class="divider-label">Scenario Date</div>
+                <div class="divider-value" style="font-size: 1.1rem; padding-top: 5px;">{wi_date.strftime('%b %Y')}</div>
+                <div style="color: #9ca3af; font-size: 0.85rem;">{wi_country} · {wi_commodity}</div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
